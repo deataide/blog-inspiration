@@ -1,0 +1,66 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id      String   @id @default(uuid()) 
+  email   String   @unique
+  name    String
+  password String
+  admin Boolean @default(false)
+  posts   Post[]
+  refresh_token RefreshToken?
+  recuperation_token String?
+  imageUrl     String?
+  likes   Like[]
+  @@map("users")
+}
+
+model Post {
+  id      String      @id @default(uuid()) 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  title     String   @db.VarChar(255)
+  content   String?
+  published Boolean  @default(false)
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  likeCount Int @default(0)
+  authorId  String
+  likes     Like[]     
+  images    Image[] 
+
+  @@map("posts")
+}
+
+model Image {
+  id String @id @default(uuid())
+  path String
+  post Post @relation(fields: [postId], references: [id])
+  postId String
+}
+
+model Like {
+  id        String    @id @default(uuid())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  post      Post      @relation(fields: [postId], references: [id])
+  postId    String
+  user User @relation(fields: [userId], references: [id])
+  userId String
+
+  @@map("likes")
+}
+
+model RefreshToken{
+  id String @id @default(uuid())
+  expiresIn Int
+  user User @relation(fields: [userId], references: [id])
+  userId String @unique
+@@map("refresh_token")
+}
+
